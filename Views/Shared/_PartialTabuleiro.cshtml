@@ -1,0 +1,49 @@
+﻿@model VLR.Models.ViewModels.VMTabuleiro
+
+@{
+    var larguraCasa = "90px";
+}
+
+<br />
+<table class="table-bordered">
+    <tbody class="">
+        @foreach (var cadaColuna in Model.Colunas)
+        {
+            <tr>
+                @foreach (var cadaCasa in cadaColuna.Casas)
+                {
+                    if (cadaCasa.Ocupante.HasValue)
+                    {
+                        switch (cadaCasa.Ocupante)
+                        {
+                            case VLR.Models.Enumerators.TipoJogador.Mercenario:
+                                <td style="text-align:center; width:@larguraCasa; height:@larguraCasa;color:red;"><h1><strong>M</strong></h1></td>
+                                break;
+                            case VLR.Models.Enumerators.TipoJogador.Soldado:
+                                <td style="text-align:center; width:@larguraCasa; height:@larguraCasa; color:green"><h1><strong>S</strong></h1></td>
+                                break;
+                            case VLR.Models.Enumerators.TipoJogador.Rei:
+                                <td style="text-align:center; width:@larguraCasa; height:@larguraCasa; color: lightslategrey"><span class="glyphicon glyphicon-tower" style="font-size:xx-large;"></span></td>
+                                break;
+                            default:
+                                <td style="text-align:center; width:@larguraCasa; height:@larguraCasa"></td>
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        if (cadaCasa.EhObjetivo)
+                        {
+                            <td style="text-align:center; width:@larguraCasa; height:@larguraCasa;background-color:springgreen "></td>
+                        }
+                        else
+                        {
+                            <td style="text-align:center; width:@larguraCasa; height:@larguraCasa"></td>
+                        }
+                    }
+
+                }
+            </tr>
+        }
+    </tbody>
+</table>
