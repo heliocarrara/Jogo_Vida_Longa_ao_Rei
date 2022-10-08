@@ -8,21 +8,22 @@ namespace VLR.Models.ViewModels
 {
     public class VMMovimento
     {
-        public VMCasaTabuleiro Casa { get; set; }
+        public VMCasaTabuleiro CasaAtual { get; set; }
 
         public TipoMovimento Direcao { get; set; }
 
-        public int NumCasasAndadas { get; set; }
+        public VMCasaTabuleiro CasaObjetivo { get; set; }
+
 
         public VMMovimento()
         {
         }
 
-        public VMMovimento(VMCasaTabuleiro casa, TipoMovimento direcao, int NumCasasAndadas)
+        public VMMovimento(VMCasaTabuleiro casaObjetivo, TipoMovimento direcao, VMCasaTabuleiro casaAtual)
         {
-            this.Casa = casa;
+            this.CasaAtual = casaAtual;
             this.Direcao = direcao;
-            this.NumCasasAndadas = NumCasasAndadas;
+            this.CasaObjetivo = casaObjetivo;
         }
     }
 }

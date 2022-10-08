@@ -1,49 +1,49 @@
 ﻿@model VLR.Models.ViewModels.VMTabuleiro
 
-@{
-    var larguraCasa = "90px";
-}
-
+<span id="pnlErro" name="pnlErro" hidden="hidden">
+    <label id="lblMsgErro" name="lblMsgErro" />
+</span>
 <br />
-<table class="table-bordered">
-    <tbody class="">
-        @foreach (var cadaColuna in Model.Colunas)
-        {
-            <tr>
-                @foreach (var cadaCasa in cadaColuna.Casas)
-                {
-                    if (cadaCasa.Ocupante.HasValue)
-                    {
-                        switch (cadaCasa.Ocupante)
-                        {
-                            case VLR.Models.Enumerators.TipoJogador.Mercenario:
-                                <td style="text-align:center; width:@larguraCasa; height:@larguraCasa;color:red;"><h1><strong>M</strong></h1></td>
-                                break;
-                            case VLR.Models.Enumerators.TipoJogador.Soldado:
-                                <td style="text-align:center; width:@larguraCasa; height:@larguraCasa; color:green"><h1><strong>S</strong></h1></td>
-                                break;
-                            case VLR.Models.Enumerators.TipoJogador.Rei:
-                                <td style="text-align:center; width:@larguraCasa; height:@larguraCasa; color: lightslategrey"><span class="glyphicon glyphicon-tower" style="font-size:xx-large;"></span></td>
-                                break;
-                            default:
-                                <td style="text-align:center; width:@larguraCasa; height:@larguraCasa"></td>
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        if (cadaCasa.EhObjetivo)
-                        {
-                            <td style="text-align:center; width:@larguraCasa; height:@larguraCasa;background-color:springgreen "></td>
-                        }
-                        else
-                        {
-                            <td style="text-align:center; width:@larguraCasa; height:@larguraCasa"></td>
-                        }
-                    }
 
-                }
-            </tr>
-        }
-    </tbody>
-</table>
+<input type="button" value="Próximo Jogador" class="btn btn-success" onclick="proximoJogador();" />
+<br />
+
+<span id="spn_tabuleiro" name="spn_tabuleiro">
+    @Html.Partial("_Tabuleiro", Model)
+</span>
+
+<span style="display:none">
+    @Html.Hidden("tabuleiro", Model)
+</span>
+
+<script type="text/javascript">
+    function proximoJogador()
+    {
+        var valorSelecionado = document.getElementById("tabuleiro");
+        valorSelecionado = document.getElementById("tabuleiro");
+                $.ajax(
+                    {
+                        type: 'POST',
+                        url: '@Url.Action("ProximoJogador", "Home", new { Area = "" })',
+                        data: tabuleiro = valorSelecionado,
+                        beforeSend: function () {
+                            //Normalmente insere o loading caso de operação mais lenta
+                            $('#pnlErro').show();
+                            $('#lblMsgErro').text("Buscando");
+                        },
+                        success: function (data) {
+                            $('#spn_tabuleiro').html("");
+                            $('#spn_tabuleiro').html(data);
+                        },
+                        error: function (response)
+                        {
+                            $('#pnlErro').show();
+                            $('#lblMsgErro').text(response.statusText);
+                        },
+                        complete: function () {
+                            //Funciona como Finally, encerra o loading
+                        }
+                    });
+
+    }
+</script>

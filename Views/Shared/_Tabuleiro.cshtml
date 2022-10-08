@@ -1,0 +1,76 @@
+﻿@model VLR.Models.ViewModels.VMTabuleiro
+
+@{
+    var larguraCasa = "70px";
+}
+
+@{int i = 0, j = 0; }
+<span style="display:none">
+    @Html.Hidden("tabuleiro", Model)
+</span>
+
+@if (Model != null)
+{
+    <table class="table-bordered">
+        <tbody class="">
+            @for (i = 0; i < Model.Colunas.Count; i++)
+            {
+                <tr>
+                    <td>
+                        <span style="display:none">
+                            @Html.EditorFor(m => Model.Colunas[i].Rotulo)
+                            @Html.EditorFor(m => Model.Colunas[i].Casas)
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    @for (j = 0; j < Model.Colunas[i].Casas.Count; j++)
+                    {
+
+
+                        <td>
+                            <span style="display:none">
+                                @Html.EditorFor(m => Model.Colunas[i].Casas[j].Ocupante)
+
+                                @Html.EditorFor(m => Model.Colunas[i].Casas[j].x)
+                                @Html.EditorFor(m => Model.Colunas[i].Casas[j].EhObjetivo)
+                                @Html.EditorFor(m => Model.Colunas[i].Casas[j].y)
+                            </span>
+                        </td>
+
+                        if (Model.Colunas[i].Casas[j].Ocupante.HasValue)
+                        {
+                            switch (Model.Colunas[i].Casas[j].Ocupante)
+                            {
+                                case VLR.Models.Enumerators.TipoJogador.Mercenario:
+                                    <td style="text-align:center; width:@larguraCasa; height:@larguraCasa;color:red;"><h1><strong>M</strong></h1></td>
+                                    break;
+                                case VLR.Models.Enumerators.TipoJogador.Soldado:
+                                    <td style="text-align:center; width:@larguraCasa; height:@larguraCasa; color:green"><h1><strong>S</strong></h1></td>
+                                    break;
+                                case VLR.Models.Enumerators.TipoJogador.Rei:
+                                    <td style="text-align:center; width:@larguraCasa; height:@larguraCasa; color: lightslategrey"><span class="glyphicon glyphicon-tower" style="font-size:xx-large;"></span></td>
+                                    break;
+                                default:
+                                    <td style="text-align:center; width:@larguraCasa; height:@larguraCasa"></td>
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            if (Model.Colunas[i].Casas[j].EhObjetivo)
+                            {
+                                <td style="text-align:center; width:@larguraCasa; height:@larguraCasa;background-color:springgreen "></td>
+                            }
+                            else
+                            {
+                                <td style="text-align:center; width:@larguraCasa; height:@larguraCasa"></td>
+                            }
+                        }
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+

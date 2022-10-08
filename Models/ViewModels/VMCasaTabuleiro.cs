@@ -18,11 +18,5 @@ namespace VLR.Models.ViewModels
         public VMCasaTabuleiro()
         {
         }
-
-        public VMCasaTabuleiro(int x, int y)
-        {
-            this.x = x;
-            this.y = y;
-        }
     }
 }
