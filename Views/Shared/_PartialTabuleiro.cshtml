@@ -1,20 +1,27 @@
-﻿@model VLR.Models.ViewModels.VMTabuleiro
+﻿@model VLR.Models.ViewModels.FormViewModels.VMFormTabuleiro
 
-<span id="pnlErro" name="pnlErro" hidden="hidden">
-    <label id="lblMsgErro" name="lblMsgErro" />
+<span id="pnlErro" name="pnlErro">
+    @foreach (var cadaMensagem in Model.mensagens)
+    {
+        <br />
+        <label>@cadaMensagem</label>
+    }
 </span>
 <br />
+@Html.ActionLink("Ir Proximo", "Proximo", new { Area = "", pecas = Model.pecas}, new { @class = "btn btn-success"})
 
-<input type="button" value="Próximo Jogador" class="btn btn-success" onclick="proximoJogador();" />
-<br />
+@if (Model != null)
+{
+    <span style="display:none">
 
-<span id="spn_tabuleiro" name="spn_tabuleiro">
-    @Html.Partial("_Tabuleiro", Model)
-</span>
+    </span>
+    <span id="spn_tabuleiro" name="spn_tabuleiro">
+        @Html.Partial("_Tabuleiro", Model.Tabuleiro)
+    </span>
+}
 
-<span style="display:none">
-    @Html.Hidden("tabuleiro", Model)
-</span>
+
+
 
 <script type="text/javascript">
     function proximoJogador()

@@ -5,24 +5,33 @@ using System.Web;
 using System.Web.Mvc;
 using VLR.Models.Enumerators;
 using VLR.Models.ViewModels;
+using VLR.Models.ViewModels.FormViewModels;
 
 namespace VLR.Controllers
 {
     public class HomeController : Controller
     {
-        const string view = "Index";
+        const string view = "_PartialTabuleiro";
         public ActionResult Index()
         {
-            return View();
+            return View("Index");
         }
 
         public ActionResult Jogar()
         {
             try
             {
-                var tabuleiro = OrganizarPecas(new VMTabuleiro());
+                var tabuleiro = OrganizarPecas(GerarMatriz());
+                var form = new VMFormTabuleiro();
 
-                return View(view, tabuleiro);
+                form.Tabuleiro = tabuleiro;
+                form.pecas = CodificarPecas(form.Tabuleiro);
+                form.qntMovimento = 1;
+
+                form.mensagens.Add("Tabuleiro Criado e peças organizadas.");
+                form.mensagens.Add("Jogador Atual: " + (int)form.Tabuleiro.jogadorAtual);
+
+                return View(view, form);
             }
             catch
             {
@@ -30,24 +39,57 @@ namespace VLR.Controllers
             }
         }
 
-        public ActionResult ProximoJogador(VMTabuleiro tabuleiro)
+        public ActionResult ProximoJogador(VMFormTabuleiro form)
         {
             try
             {
-                var proximoJogador = GetProximoJogador(tabuleiro.jogadorAtual);
+                //var form = new VMFormTabuleiro();
 
-                var movimentosPossiveis = GetMovimentosPossiveis(tabuleiro, proximoJogador);
+                if (form == null || string.IsNullOrEmpty(form.pecas))
+                {
+                    throw new Exception("Formularío não carregado.");
+                }
 
-                var melhorMovimento = MelhorMovimento(movimentosPossiveis, proximoJogador);
+                form.Tabuleiro = GerarMatriz();
 
-                var model = RealizarMovimento(tabuleiro, melhorMovimento);
+                form.Tabuleiro = DecodificarPecas(form.Tabuleiro, form.pecas);
+                form.mensagens.Add("Peças decodificadas.");
 
-                return PartialView("_Tabuleiro", tabuleiro);
+                form.qntMovimento = (form.qntMovimento + 1);
+                form.mensagens.Add("Jogador Atual: " + (int)form.Tabuleiro.jogadorAtual);
+
+                var proximoJogador = GetProximoJogador(form.Tabuleiro.jogadorAtual);
+
+                var movimentosPossiveis = GetMovimentosPossiveis(form.Tabuleiro, proximoJogador);
+
+                if (movimentosPossiveis.Any())
+                {
+                    var melhorMovimento = MelhorMovimento(movimentosPossiveis, proximoJogador);
+
+                    form.Tabuleiro = RealizarMovimento(form.Tabuleiro, melhorMovimento);
+                }
+                else
+                {
+                    form.Tabuleiro.jogadorAtual = proximoJogador;
+                }
+
+                form.pecas = CodificarPecas(form.Tabuleiro);
+
+                return View(view, form);
             }
-            catch
+            catch (Exception ex)
             {
                 return Index();
             }
+        }
+
+        public ActionResult Proximo(string pecas)
+        {
+            var form = new VMFormTabuleiro();
+
+            form.pecas = pecas;
+
+            return ProximoJogador(form);
         }
 
         private List<TipoJogador> GerarOrdemJogadores()
@@ -83,7 +125,7 @@ namespace VLR.Controllers
             return ordem.FirstOrDefault();
         }
 
-        private List<VMMovimento> GetMovimentosPossiveis (VMTabuleiro tabuleiro, TipoJogador jogador)
+        private List<VMMovimento> GetMovimentosPossiveis(VMTabuleiro tabuleiro, TipoJogador jogador)
         {
             var movimentos = new List<VMMovimento>();
 
@@ -96,7 +138,7 @@ namespace VLR.Controllers
 
             casasComJogador = casasComJogador.Distinct().ToList();
 
-            foreach(var cadaPeca in casasComJogador)
+            foreach (var cadaPeca in casasComJogador)
             {
                 movimentos.AddRange(GetMovimentosDisponiveisPorPeca(tabuleiro, cadaPeca));
             }
@@ -132,7 +174,7 @@ namespace VLR.Controllers
                 movimentos.Add(new VMMovimento(tabuleiro.Colunas[i].Casas[Peca.y], TipoMovimento.Horizontal, Peca));
             }
 
-            for(j = Peca.y + 1; j < 11; j++)
+            for (j = Peca.y + 1; j < 11; j++)
             {
                 if (tabuleiro.Colunas[Peca.x].Casas[j].Ocupante.HasValue)
                 {
@@ -157,14 +199,14 @@ namespace VLR.Controllers
             return movimentos.Distinct().ToList();
         }
 
-        private VMMovimento MelhorMovimento (List<VMMovimento> movimentos, TipoJogador jogador)
+        private VMMovimento MelhorMovimento(List<VMMovimento> movimentos, TipoJogador jogador)
         {
             Random rand = new Random();
 
             return movimentos[rand.Next(0, movimentos.Count)];
         }
 
-        private VMTabuleiro RealizarMovimento (VMTabuleiro tabuleiro, VMMovimento movimento)
+        private VMTabuleiro RealizarMovimento(VMTabuleiro tabuleiro, VMMovimento movimento)
         {
             tabuleiro.Colunas[movimento.CasaObjetivo.x].Casas[movimento.CasaObjetivo.y].Ocupante = movimento.CasaAtual.Ocupante.Value;
             tabuleiro.Colunas[movimento.CasaAtual.x].Casas[movimento.CasaAtual.y].Ocupante = null;
@@ -176,23 +218,7 @@ namespace VLR.Controllers
 
         private VMTabuleiro OrganizarPecas(VMTabuleiro tabuleiro)
         {
-            tabuleiro.Colunas = new List<VMColuna>();
-            tabuleiro.jogadorAtual = TipoJogador.Soldado;
-
-            for (int i = 0; i < 11; i++)
-            {
-                tabuleiro.Colunas.Add(new VMColuna());
-                tabuleiro.Colunas[i].Casas = new List<VMCasaTabuleiro>();
-
-                for (int j = 0; j < 11; j++)
-                {
-                    tabuleiro.Colunas[i].Casas.Add(new VMCasaTabuleiro());
-
-                    tabuleiro.Colunas[i].Casas[j].x = i;
-                    tabuleiro.Colunas[i].Casas[j].y = j;
-                }
-            }
-
+            tabuleiro.jogadorAtual = TipoJogador.Rei;
             //Refúgios
             {
                 tabuleiro.Colunas[0].Casas[0].EhObjetivo = true;
@@ -251,6 +277,79 @@ namespace VLR.Controllers
                 tabuleiro.Colunas[10].Casas[5].Ocupante = TipoJogador.Mercenario;
                 tabuleiro.Colunas[10].Casas[6].Ocupante = TipoJogador.Mercenario;
                 tabuleiro.Colunas[10].Casas[7].Ocupante = TipoJogador.Mercenario;
+            }
+
+            return tabuleiro;
+        }
+
+        private VMTabuleiro GerarMatriz()
+        {
+            var tabuleiro = new VMTabuleiro();
+
+            tabuleiro.Colunas = new List<VMColuna>();
+
+            for (int i = 0; i < 11; i++)
+            {
+                tabuleiro.Colunas.Add(new VMColuna());
+                tabuleiro.Colunas[i].Casas = new List<VMCasaTabuleiro>();
+
+                for (int j = 0; j < 11; j++)
+                {
+                    tabuleiro.Colunas[i].Casas.Add(new VMCasaTabuleiro());
+
+                    tabuleiro.Colunas[i].Casas[j].x = i;
+                    tabuleiro.Colunas[i].Casas[j].y = j;
+                }
+            }
+
+            return tabuleiro;
+        }
+
+        private string CodificarPecas(VMTabuleiro tabuleiro)
+        {
+            string pecas = string.Empty;
+
+            for (int i = 0; i < 11; i++)
+            {
+                for (int j = 0; j < 11; j++)
+                {
+                    int p = tabuleiro.Colunas[i].Casas[j].Ocupante.HasValue ? (int)tabuleiro.Colunas[i].Casas[j].Ocupante.Value : 0;
+                    pecas += i + "," + j + "," + p + ";";
+                }
+            }
+
+            pecas += (int)tabuleiro.jogadorAtual;
+
+            return pecas;
+        }
+
+        private VMTabuleiro DecodificarPecas(VMTabuleiro tabuleiro, string pecas)
+        {
+            var p = pecas.Split(';').ToList();
+
+            tabuleiro.jogadorAtual = (TipoJogador)int.Parse(p[p.Count - 1]);
+
+            foreach (var cadaItem in p)
+            {
+                if (!string.IsNullOrWhiteSpace(cadaItem))
+                {
+                    var cadaPeca = cadaItem.Split(',');
+
+                    if (cadaPeca.Length > 2 && int.Parse(cadaPeca[2]) != 0)
+                    {
+                        tabuleiro.Colunas[int.Parse(cadaPeca[0])].Casas[int.Parse(cadaPeca[1])].Ocupante = (TipoJogador)int.Parse(cadaPeca[2]);
+                    }//
+                    //TipoJogador? tipoJogador = null;
+
+                    //if (int.Parse(cadaPeca[2]) != 0)
+                    //{
+                    //    tipoJogador = (TipoJogador)int.Parse(cadaPeca[2]);
+                    //}
+
+                    //tabuleiro.Colunas[int.Parse(cadaPeca[0])].Casas[int.Parse(cadaPeca[1])].Ocupante = tipoJogador;
+
+
+                }
             }
 
             return tabuleiro;

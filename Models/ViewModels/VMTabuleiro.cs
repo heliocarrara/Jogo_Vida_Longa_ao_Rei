@@ -14,5 +14,6 @@ namespace VLR.Models.ViewModels
         public VMTabuleiro()
         {
         }
+
     }
 }
