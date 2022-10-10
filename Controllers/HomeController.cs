@@ -62,15 +62,13 @@ namespace VLR.Controllers
 
                 var movimentosPossiveis = GetMovimentosPossiveis(form.Tabuleiro, proximoJogador);
 
+                form.Tabuleiro.jogadorAtual = proximoJogador;
+
                 if (movimentosPossiveis.Any())
                 {
                     var melhorMovimento = MelhorMovimento(movimentosPossiveis, proximoJogador);
 
                     form.Tabuleiro = RealizarMovimento(form.Tabuleiro, melhorMovimento);
-                }
-                else
-                {
-                    form.Tabuleiro.jogadorAtual = proximoJogador;
                 }
 
                 form.pecas = CodificarPecas(form.Tabuleiro);
@@ -301,6 +299,11 @@ namespace VLR.Controllers
                     tabuleiro.Colunas[i].Casas[j].y = j;
                 }
             }
+
+            tabuleiro.Colunas[0].Casas[0].EhObjetivo = true;
+            tabuleiro.Colunas[0].Casas[10].EhObjetivo = true;
+            tabuleiro.Colunas[10].Casas[0].EhObjetivo = true;
+            tabuleiro.Colunas[10].Casas[10].EhObjetivo = true;
 
             return tabuleiro;
         }
