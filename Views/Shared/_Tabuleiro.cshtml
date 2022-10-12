@@ -21,42 +21,42 @@
         <tbody class="">
             @for (i = 0; i < Model.Colunas.Count; i++)
             {
-            <tr>
-                <td width="@larguraCasa" height="@larguraCasa" align="center"><h3>X=<strong>@(i)</strong></h3></td>
-                @for (j = 0; j < Model.Colunas[i].Casas.Count; j++)
-                {
-                    
-                    if (Model.Colunas[i].Casas[j].Ocupante.HasValue)
+                <tr>
+                    <td width="@larguraCasa" height="@larguraCasa" align="center"><h3>X=<strong>@(i)</strong></h3></td>
+                    @for (j = 0; j < Model.Colunas[i].Casas.Count; j++)
                     {
-                        switch (Model.Colunas[i].Casas[j].Ocupante)
+                        var bc = Model.Colunas[i].Casas[j].movida ? "aquamarine" : "";
+                        if (Model.Colunas[i].Casas[j].Ocupante.HasValue)
                         {
-                            case VLR.Models.Enumerators.TipoJogador.Mercenario:
-                                <td style="text-align:center; width:@larguraCasa; height:@larguraCasa;color:red;"><h1><strong>M</strong></h1></td>
-                                break;
-                            case VLR.Models.Enumerators.TipoJogador.Soldado:
-                                <td style="text-align:center; width:@larguraCasa; height:@larguraCasa; color:green"><h1><strong>S</strong></h1></td>
-                                break;
-                            case VLR.Models.Enumerators.TipoJogador.Rei:
-                                <td style="text-align:center; width:@larguraCasa; height:@larguraCasa; color: lightslategrey"><span class="glyphicon glyphicon-tower" style="font-size:xx-large;"></span></td>
-                                break;
-                            default:
-                                <td style="text-align:center; width:@larguraCasa; height:@larguraCasa"></td>
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        if (Model.Colunas[i].Casas[j].EhObjetivo)
-                        {
-                            <td style="text-align:center; width:@larguraCasa; height:@larguraCasa;background-color:springgreen "></td>
+                            switch (Model.Colunas[i].Casas[j].Ocupante)
+                            {
+                                case VLR.Models.Enumerators.TipoJogador.Mercenario:
+                                    <td style="text-align:center; width:@larguraCasa; height:@larguraCasa;color:red; background-color:@bc;"><h1><strong>M</strong></h1></td>
+                                    break;
+                                case VLR.Models.Enumerators.TipoJogador.Soldado:
+                                    <td style="text-align:center; width:@larguraCasa; height:@larguraCasa; color:green; background-color:@bc;"><h1><strong>S</strong></h1></td>
+                                    break;
+                                case VLR.Models.Enumerators.TipoJogador.Rei:
+                                    <td style="text-align:center; width:@larguraCasa; height:@larguraCasa; color: lightslategrey; background-color:@bc;"><span class="glyphicon glyphicon-tower" style="font-size:xx-large;"></span></td>
+                                    break;
+                                default:
+                                    <td style="text-align:center; width:@larguraCasa; height:@larguraCasa; background-color:@bc;"></td>
+                                    break;
+                            }
                         }
                         else
                         {
-                            <td style="text-align:center; width:@larguraCasa; height:@larguraCasa"></td>
+                            if (Model.Colunas[i].Casas[j].EhObjetivo)
+                            {
+                                <td style="text-align:center; width:@larguraCasa; height:@larguraCasa;background-color:springgreen "></td>
+                            }
+                            else
+                            {
+                                <td style="text-align:center; width:@larguraCasa; height:@larguraCasa;background-color:@bc "></td>
+                            }
                         }
                     }
-                }
-            </tr>
+                </tr>
             }
         </tbody>
     </table>

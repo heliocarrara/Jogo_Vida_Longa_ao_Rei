@@ -10,6 +10,7 @@ namespace VLR.Models.ViewModels
     {
         public TipoJogador? Ocupante { get; set; }
         public bool EhObjetivo { get; set; }
+        public bool movida { get; set; }
         public int x { get; set; }
         public int y { get; set; }
 

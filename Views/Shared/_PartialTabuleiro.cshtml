@@ -1,56 +1,20 @@
 ﻿@model VLR.Models.ViewModels.FormViewModels.VMFormTabuleiro
 
-<span id="pnlErro" name="pnlErro">
-    @foreach (var cadaMensagem in Model.mensagens)
-    {
-        <br />
-        <label>@cadaMensagem</label>
-    }
-</span>
 <br />
-@Html.ActionLink("Ir Proximo", "Proximo", new { Area = "", pecas = Model.pecas}, new { @class = "btn btn-success"})
-
+<p>
+    @Html.ActionLink("Ir Proximo", "Proximo", new { Area = "", pecas = Model.pecas }, new { @class = "btn btn-success", @name="btn" })
+</p>
 @if (Model != null)
 {
-    <span style="display:none">
-
-    </span>
     <span id="spn_tabuleiro" name="spn_tabuleiro">
         @Html.Partial("_Tabuleiro", Model.Tabuleiro)
     </span>
-}
 
-
-
-
-<script type="text/javascript">
-    function proximoJogador()
+    foreach (var cadaMensagem in Model.mensagens)
     {
-        var valorSelecionado = document.getElementById("tabuleiro");
-        valorSelecionado = document.getElementById("tabuleiro");
-                $.ajax(
-                    {
-                        type: 'POST',
-                        url: '@Url.Action("ProximoJogador", "Home", new { Area = "" })',
-                        data: tabuleiro = valorSelecionado,
-                        beforeSend: function () {
-                            //Normalmente insere o loading caso de operação mais lenta
-                            $('#pnlErro').show();
-                            $('#lblMsgErro').text("Buscando");
-                        },
-                        success: function (data) {
-                            $('#spn_tabuleiro').html("");
-                            $('#spn_tabuleiro').html(data);
-                        },
-                        error: function (response)
-                        {
-                            $('#pnlErro').show();
-                            $('#lblMsgErro').text(response.statusText);
-                        },
-                        complete: function () {
-                            //Funciona como Finally, encerra o loading
-                        }
-                    });
-
+        <br />
+        <div id="pnlErro" name="pnlErro" class="panel panel-info" style="width:840px; text-align:center">
+            <div class="panel-heading"><h3>Último Movimento Realizado: <strong>@cadaMensagem</strong></h3></div>
+        </div>
     }
-</script>
+}
