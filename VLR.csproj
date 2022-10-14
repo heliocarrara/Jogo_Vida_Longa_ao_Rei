@@ -236,6 +236,7 @@
     <Compile Include="Models\ViewModels\FormViewModels\VMFormTabuleiro.cs" />
     <Compile Include="Models\ViewModels\VMCasaTabuleiro.cs" />
     <Compile Include="Models\ViewModels\VMColuna.cs" />
+    <Compile Include="Models\ViewModels\VMHeuristica.cs" />
     <Compile Include="Models\ViewModels\VMMovimento.cs" />
     <Compile Include="Models\ViewModels\VMTabuleiro.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

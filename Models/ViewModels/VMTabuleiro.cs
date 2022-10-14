@@ -15,5 +15,28 @@ namespace VLR.Models.ViewModels
         {
         }
 
+        public VMTabuleiro(List<VMColuna> colunas, TipoJogador jogadorAtual)
+        {
+            Colunas = colunas;
+            this.jogadorAtual = jogadorAtual;
+
+            this.Colunas = new List<VMColuna>();
+
+            foreach (var cadaColuna in colunas)
+            {
+                var coluna = new VMColuna();
+                
+                var listaCasas = new List<VMCasaTabuleiro> ();
+
+                foreach(var cadaCasa in cadaColuna.Casas)
+                {
+                    listaCasas.Add(new VMCasaTabuleiro { x = cadaCasa.x, y = cadaCasa.y, Ocupante = cadaCasa.Ocupante });
+                }
+
+                coluna.Casas = listaCasas;
+
+                this.Colunas.Add(coluna);
+            }
+        }
     }
 }

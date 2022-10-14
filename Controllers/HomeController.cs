@@ -64,7 +64,7 @@ namespace VLR.Controllers
 
                 form.Tabuleiro.jogadorAtual = proximoJogador;
 
-                var melhorMovimento = MelhorMovimento(form.Tabuleiro);
+                var melhorMovimento = MelhorMovimento(form.Tabuleiro,0, out int i);
 
                 if (melhorMovimento != null)
                 {
@@ -109,339 +109,438 @@ namespace VLR.Controllers
 
         private TipoJogador GetProximoJogador(TipoJogador? jogadorAtual)
         {
-            var ordem = GerarOrdemJogadores();
-
-            if (jogadorAtual.HasValue)
+            try
             {
-                int i = 0;
-                while (i < ordem.Count)
+                var ordem = GerarOrdemJogadores();
+
+                if (jogadorAtual.HasValue)
                 {
-                    if (jogadorAtual.Value == ordem[i])
+                    int i = 0;
+                    while (i < ordem.Count)
                     {
-                        if (i == (ordem.Count - 1))
+                        if (jogadorAtual.Value == ordem[i])
                         {
-                            return ordem[0];
+                            if (i == (ordem.Count - 1))
+                            {
+                                return ordem[0];
+                            }
+                            else
+                            {
+                                return ordem[i + 1];
+                            }
                         }
-                        else
-                        {
-                            return ordem[i + 1];
-                        }
+
+                        i++;
                     }
-
-                    i++;
                 }
-            }
 
-            return ordem.FirstOrDefault();
+                return ordem.FirstOrDefault();
+
+            }
+            catch (Exception ex)
+            {
+                return TipoJogador.Rei;
+            }
         }
 
         private List<VMMovimento> GetMovimentosPossiveis(VMTabuleiro tabuleiro)
         {
-            var movimentos = new List<VMMovimento>();
-
-            var casasComJogador = new List<VMCasaTabuleiro>();
-
-            foreach (var cadaColuna in tabuleiro.Colunas)
+            try
             {
-                casasComJogador.AddRange(cadaColuna.Casas.Where(x => x.Ocupante.HasValue && x.Ocupante.Value == tabuleiro.jogadorAtual));
-            }
+                var movimentos = new List<VMMovimento>();
 
-            casasComJogador = casasComJogador.Distinct().ToList();
+                var casasComJogador = new List<VMCasaTabuleiro>();
 
-            foreach (var cadaPeca in casasComJogador)
-            {
-                movimentos.AddRange(GetMovimentosDisponiveisPorPeca(tabuleiro, cadaPeca));
-            }
-
-            return movimentos;
-        }
-
-        private List<VMMovimento> GetMovimentosDisponiveisPorPeca(VMTabuleiro tabuleiro, VMCasaTabuleiro Peca)
-        {
-            var movimentos = new List<VMMovimento>();
-
-            int i = 0, j = 0;
-
-            for (i = Peca.x + 1; i < 11; i++)
-            {
-                if (tabuleiro.Colunas[i].Casas[Peca.y].Ocupante.HasValue || (tabuleiro.Colunas[i].Casas[Peca.y].EhObjetivo && tabuleiro.jogadorAtual != TipoJogador.Rei))
+                foreach (var cadaColuna in tabuleiro.Colunas)
                 {
-                    break;
+                    casasComJogador.AddRange(cadaColuna.Casas.Where(x => x.Ocupante.HasValue && x.Ocupante.Value == tabuleiro.jogadorAtual));
                 }
 
-                //REVISAR A DISTANCIA
-                movimentos.Add(new VMMovimento(tabuleiro.Colunas[i].Casas[Peca.y], TipoMovimento.Horizontal, Peca));
-            }
+                casasComJogador = casasComJogador.Distinct().ToList();
 
-            for (i = Peca.x - 1; i > 0; i--)
-            {
-                if (tabuleiro.Colunas[i].Casas[Peca.y].Ocupante.HasValue || (tabuleiro.Colunas[i].Casas[Peca.y].EhObjetivo && tabuleiro.jogadorAtual != TipoJogador.Rei))
+                foreach (var cadaPeca in casasComJogador)
                 {
-                    break;
+                    movimentos.AddRange(GetMovimentosDisponiveisPorPeca(tabuleiro, cadaPeca));
                 }
 
-                //REVISAR A DISTANCIA
-                movimentos.Add(new VMMovimento(tabuleiro.Colunas[i].Casas[Peca.y], TipoMovimento.Horizontal, Peca));
+                return movimentos;
             }
-
-            for (j = Peca.y + 1; j < 11; j++)
-            {
-                if (tabuleiro.Colunas[Peca.x].Casas[j].Ocupante.HasValue || (tabuleiro.Colunas[Peca.x].Casas[j].EhObjetivo && tabuleiro.jogadorAtual != TipoJogador.Rei))
-                {
-                    break;
-                }
-
-                //REVISAR A DISTANCIA
-                movimentos.Add(new VMMovimento(tabuleiro.Colunas[Peca.x].Casas[j], TipoMovimento.Vertical, Peca));
-            }
-
-            for (j = Peca.y - 1; j > 0; j--)
-            {
-                if (tabuleiro.Colunas[Peca.x].Casas[j].Ocupante.HasValue || (tabuleiro.Colunas[Peca.x].Casas[j].EhObjetivo && tabuleiro.jogadorAtual != TipoJogador.Rei))
-                {
-                    break;
-                }
-
-                //REVISAR A DISTANCIA
-                movimentos.Add(new VMMovimento(tabuleiro.Colunas[Peca.x].Casas[j], TipoMovimento.Vertical, Peca));
-            }
-
-            return movimentos.Distinct().ToList();
-        }
-
-        private VMMovimento MelhorMovimento(VMTabuleiro tabuleiro)
-        {
-
-            var movimentosPossiveis = GetMovimentosPossiveis(tabuleiro);
-
-            if (!movimentosPossiveis.Any())
+            catch (Exception ex)
             {
                 return null;
             }
 
-            var rand = new Random();
-            int c = rand.Next(0, movimentosPossiveis.Count);
+        }
 
-            if (tabuleiro.jogadorAtual == TipoJogador.Mercenario)
-            {
-                return movimentosPossiveis[c];
-            }
-
-            int posicao = c;
-
-            switch (tabuleiro.jogadorAtual)
-            {
-                case TipoJogador.Soldado:
-                    //ReiEstaProtegido()
-                    break;
-                case TipoJogador.Rei:
-                    //Get4Objetivos()
-                    break;
-                default:
-                    break;
-            }
-
-            foreach (var cadaMovimento in movimentosPossiveis)
+        private List<VMMovimento> GetMovimentosDisponiveisPorPeca(VMTabuleiro tabuleiro, VMCasaTabuleiro Peca)
+        {
+            try
             {
 
-                //EstouAjudandoACercar();
-                //EstouEmPerigo()
-                //PossoAndarAqui Deveria estar em movimentos disponiveis
+                var movimentos = new List<VMMovimento>();
 
+                int i = 0, j = 0;
 
+                for (i = Peca.x + 1; i < 11; i++)
+                {
+                    if (tabuleiro.Colunas[i].Casas[Peca.y].Ocupante.HasValue || (tabuleiro.Colunas[i].Casas[Peca.y].EhObjetivo && tabuleiro.jogadorAtual != TipoJogador.Rei))
+                    {
+                        break;
+                    }
+
+                    //REVISAR A DISTANCIA
+                    movimentos.Add(new VMMovimento(tabuleiro.Colunas[i].Casas[Peca.y], TipoMovimento.Horizontal, Peca));
+                }
+
+                for (i = Peca.x - 1; i >= 0; i--)
+                {
+                    if (tabuleiro.Colunas[i].Casas[Peca.y].Ocupante.HasValue || (tabuleiro.Colunas[i].Casas[Peca.y].EhObjetivo && tabuleiro.jogadorAtual != TipoJogador.Rei))
+                    {
+                        break;
+                    }
+
+                    //REVISAR A DISTANCIA
+                    movimentos.Add(new VMMovimento(tabuleiro.Colunas[i].Casas[Peca.y], TipoMovimento.Horizontal, Peca));
+                }
+
+                for (j = Peca.y + 1; j < 11; j++)
+                {
+                    if (tabuleiro.Colunas[Peca.x].Casas[j].Ocupante.HasValue || (tabuleiro.Colunas[Peca.x].Casas[j].EhObjetivo && tabuleiro.jogadorAtual != TipoJogador.Rei))
+                    {
+                        break;
+                    }
+
+                    //REVISAR A DISTANCIA
+                    movimentos.Add(new VMMovimento(tabuleiro.Colunas[Peca.x].Casas[j], TipoMovimento.Vertical, Peca));
+                }
+
+                for (j = Peca.y - 1; j >= 0; j--)
+                {
+                    if (tabuleiro.Colunas[Peca.x].Casas[j].Ocupante.HasValue || (tabuleiro.Colunas[Peca.x].Casas[j].EhObjetivo && tabuleiro.jogadorAtual != TipoJogador.Rei))
+                    {
+                        break;
+                    }
+
+                    //REVISAR A DISTANCIA
+                    movimentos.Add(new VMMovimento(tabuleiro.Colunas[Peca.x].Casas[j], TipoMovimento.Vertical, Peca));
+                }
+
+                return movimentos.Distinct().ToList();
             }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        private VMMovimento MelhorMovimento(VMTabuleiro tabuleiro, int level, out int nivel)
+        {
+            try
+            {
+                nivel = level++;
+                var movimentosPossiveis = GetMovimentosPossiveis(tabuleiro);
+
+                if (ObjetivoConcluido(tabuleiro, out string m))
+                {
+                    return null;
+                }
+
+                var listaMovimentos = new List<VMHeuristica>();
+
+                if (!movimentosPossiveis.Any())
+                {
+                    return null;
+                }
+
+                var rand = new Random();
+                int c = rand.Next(0, movimentosPossiveis.Count);
+
+                VMCasaTabuleiro melhorObjetivo;
+
+                List<string> messages;
+                switch (tabuleiro.jogadorAtual)
+                {
+                    case TipoJogador.Soldado:
+                        var movimentos = AbrirCaminho(tabuleiro);
+
+                        if (movimentos == null || !movimentos.Any())
+                        {
+                            listaMovimentos.Add(new VMHeuristica(movimentosPossiveis[c], 0, EstouEmPerigo(tabuleiro, movimentosPossiveis[c].CasaObjetivo)));
+                        }
+                        else
+                        {
+                            listaMovimentos.AddRange(movimentos);
+                        }
+
+                        listaMovimentos = listaMovimentos.OrderBy(y => y.Valor).ToList();
+                        break;
+                    case TipoJogador.Rei:
+                        melhorObjetivo = MelhorObjetivo(tabuleiro, TipoJogador.Rei);
+
+                        for (var z = 0; z < movimentosPossiveis.Count; z++)
+                        {
+                            listaMovimentos.Add(new VMHeuristica(movimentosPossiveis[z], CalcularDistancia(melhorObjetivo, movimentosPossiveis[z].CasaObjetivo), EstouEmPerigo(tabuleiro, movimentosPossiveis[z].CasaObjetivo)));
+                        }
+
+                        listaMovimentos = listaMovimentos.OrderBy(y => y.Valor).ToList();
+                        break;
+                    case TipoJogador.Mercenario:
+                        melhorObjetivo = MelhorObjetivo(tabuleiro, TipoJogador.Mercenario);
+
+                        for (var z = 0; z < movimentosPossiveis.Count; z++)
+                        {
+                            var tabuleiroSimulado = SimularJogada(tabuleiro, movimentosPossiveis[z]);
+
+                            tabuleiroSimulado.jogadorAtual = TipoJogador.Rei;
+
+                            var melhorMovimentoRei = MelhorMovimento(tabuleiroSimulado, level, out nivel);
+
+                            listaMovimentos.Add(new VMHeuristica(movimentosPossiveis[z], CalcularDistancia(movimentosPossiveis[z].CasaAtual, melhorObjetivo), EstouEmPerigo(tabuleiro, movimentosPossiveis[z].CasaObjetivo), EstouAjudandoACercar(tabuleiro, movimentosPossiveis[z].CasaObjetivo), PossoTocarORei(tabuleiro, movimentosPossiveis[z]), level));
+                        }
+
+                        listaMovimentos = listaMovimentos.OrderBy(y => y.Valor).ToList();
+                        break;
+                    default:
+                        listaMovimentos.Add(new VMHeuristica(movimentosPossiveis[c], 0, false, false, false, 0));
+                        break;
+                }
 
 
 
-
-
-
-            return movimentosPossiveis[posicao];
+                return listaMovimentos[0].Movimento;
+            }
+            catch (Exception ex)
+            {
+                nivel = level;
+                return null;
+            }
         }
 
         private VMTabuleiro RealizarMovimento(VMTabuleiro tabuleiro, VMMovimento movimento, out List<string> message)
         {
-            message = new List<string>();
-
-            tabuleiro.Colunas[movimento.CasaObjetivo.x].Casas[movimento.CasaObjetivo.y].Ocupante = movimento.CasaAtual.Ocupante.Value;
-            tabuleiro.Colunas[movimento.CasaAtual.x].Casas[movimento.CasaAtual.y].Ocupante = null;
-
-            tabuleiro.Colunas[movimento.CasaObjetivo.x].Casas[movimento.CasaObjetivo.y].movida = true;
-            tabuleiro.Colunas[movimento.CasaAtual.x].Casas[movimento.CasaAtual.y].movida = true;
-
-            tabuleiro.jogadorAtual = movimento.CasaObjetivo.Ocupante.Value;
-
-            var adjacentes = GetCasasAdjacentes(tabuleiro, movimento.CasaObjetivo);
-
-            var guardaReal = new List<TipoJogador> { TipoJogador.Rei, TipoJogador.Soldado };
-
-            //Quando anda para armadilha
+            try
             {
-                if (adjacentes.Count(x => x.Ocupante.HasValue && x.Ocupante.Value == TipoJogador.Mercenario) > 1 && tabuleiro.Colunas[movimento.CasaObjetivo.x].Casas[movimento.CasaObjetivo.y].Ocupante == TipoJogador.Soldado)
-                {
-                    message.Add(string.Format("Um Soldado foi eliminado em: ({0},{1})", movimento.CasaObjetivo.x, movimento.CasaObjetivo.y));
-                    tabuleiro.Colunas[movimento.CasaObjetivo.x].Casas[movimento.CasaObjetivo.y].Ocupante = null;
-                }
 
-                if (adjacentes.Count(x => x.Ocupante.HasValue && guardaReal.Contains(x.Ocupante.Value)) > 1 && tabuleiro.Colunas[movimento.CasaObjetivo.x].Casas[movimento.CasaObjetivo.y].Ocupante == TipoJogador.Mercenario)
-                {
-                    message.Add(string.Format("Um mercenário foi eliminado: ({0},{1})", movimento.CasaObjetivo.x, movimento.CasaObjetivo.y));
-                    tabuleiro.Colunas[movimento.CasaObjetivo.x].Casas[movimento.CasaObjetivo.y].Ocupante = null;
-                }
+                message = new List<string>();
 
-                if (tabuleiro.Colunas[movimento.CasaObjetivo.x].Casas[movimento.CasaObjetivo.y].Ocupante == TipoJogador.Rei && adjacentes.Count(x => x.Ocupante.HasValue && x.Ocupante.Value == TipoJogador.Mercenario) > 4)
-                {
-                    message.Add(string.Format("O Rei morreu em: ({0},{1})", movimento.CasaObjetivo.x, movimento.CasaObjetivo.y));
-                    tabuleiro.Colunas[movimento.CasaObjetivo.x].Casas[movimento.CasaObjetivo.y].Ocupante = null;
-                }
-            }
+                tabuleiro.Colunas[movimento.CasaObjetivo.x].Casas[movimento.CasaObjetivo.y].Ocupante = movimento.CasaAtual.Ocupante.Value;
+                tabuleiro.Colunas[movimento.CasaAtual.x].Casas[movimento.CasaAtual.y].Ocupante = null;
 
-            //Quando vai ajudar a eliminar
-            {
-                foreach (var cadaAdjacente in adjacentes)
+                tabuleiro.Colunas[movimento.CasaObjetivo.x].Casas[movimento.CasaObjetivo.y].movida = true;
+                tabuleiro.Colunas[movimento.CasaAtual.x].Casas[movimento.CasaAtual.y].movida = true;
+
+                tabuleiro.jogadorAtual = tabuleiro.Colunas[movimento.CasaObjetivo.x].Casas[movimento.CasaObjetivo.y].Ocupante.Value;
+
+                var adjacentes = GetCasasAdjacentes(tabuleiro, movimento.CasaObjetivo);
+
+                var guardaReal = new List<TipoJogador> { TipoJogador.Rei, TipoJogador.Soldado };
+
+                //Quando anda para armadilha
                 {
-                    if (cadaAdjacente.Ocupante.HasValue)
+                    if (adjacentes.Count(x => x.Ocupante.HasValue && x.Ocupante.Value == TipoJogador.Mercenario) > 1 && tabuleiro.Colunas[movimento.CasaObjetivo.x].Casas[movimento.CasaObjetivo.y].Ocupante == TipoJogador.Soldado)
                     {
-                        var subAdjacentes = GetCasasAdjacentes(tabuleiro, cadaAdjacente);
+                        message.Add(string.Format("Um Soldado foi eliminado em: ({0},{1})", movimento.CasaObjetivo.x, movimento.CasaObjetivo.y));
+                        tabuleiro.Colunas[movimento.CasaObjetivo.x].Casas[movimento.CasaObjetivo.y].Ocupante = null;
+                    }
 
-                        if (subAdjacentes.Count(x => x.Ocupante.HasValue && guardaReal.Contains(x.Ocupante.Value)) > 1 && cadaAdjacente.Ocupante.Value == TipoJogador.Mercenario)
-                        {
-                            message.Add(string.Format("Um Mercenário foi encurralado em: ({0},{1})", cadaAdjacente.x, cadaAdjacente.y));
-                            tabuleiro.Colunas[cadaAdjacente.x].Casas[cadaAdjacente.y].Ocupante = null;
-                        }
+                    if (adjacentes.Count(x => x.Ocupante.HasValue && guardaReal.Contains(x.Ocupante.Value)) > 1 && tabuleiro.Colunas[movimento.CasaObjetivo.x].Casas[movimento.CasaObjetivo.y].Ocupante == TipoJogador.Mercenario)
+                    {
+                        message.Add(string.Format("Um mercenário foi eliminado: ({0},{1})", movimento.CasaObjetivo.x, movimento.CasaObjetivo.y));
+                        tabuleiro.Colunas[movimento.CasaObjetivo.x].Casas[movimento.CasaObjetivo.y].Ocupante = null;
+                    }
 
-                        if (subAdjacentes.Count(x => x.Ocupante.HasValue && x.Ocupante.Value == TipoJogador.Mercenario) > 1 && cadaAdjacente.Ocupante.Value == TipoJogador.Soldado)
-                        {
-                            message.Add(string.Format("Um Soldado foi encurralado em: ({0},{1})", cadaAdjacente.x, cadaAdjacente.y));
-                            tabuleiro.Colunas[cadaAdjacente.x].Casas[cadaAdjacente.y].Ocupante = null;
-                        }
+                    //if (tabuleiro.Colunas[movimento.CasaObjetivo.x].Casas[movimento.CasaObjetivo.y].Ocupante == TipoJogador.Rei && adjacentes.Count(x => x.Ocupante.HasValue && x.Ocupante.Value == TipoJogador.Mercenario) == adjacentes.Count)
+                    //{
+                    //    message.Add(string.Format("O Rei morreu em: ({0},{1})", movimento.CasaObjetivo.x, movimento.CasaObjetivo.y));
+                    //    tabuleiro.Colunas[movimento.CasaObjetivo.x].Casas[movimento.CasaObjetivo.y].Ocupante = null;
+                    //}
+                }
 
-                        if (subAdjacentes.Count(x => x.Ocupante.HasValue && x.Ocupante.Value == TipoJogador.Mercenario) > 3 && cadaAdjacente.Ocupante.Value == TipoJogador.Rei)
+                //Quando vai ajudar a eliminar
+                {
+                    foreach (var cadaAdjacente in adjacentes)
+                    {
+                        if (cadaAdjacente.Ocupante.HasValue)
                         {
-                            message.Add(string.Format("O Rei foi encurralado em: ({0},{1})", cadaAdjacente.x, cadaAdjacente.y));
-                            tabuleiro.Colunas[cadaAdjacente.x].Casas[cadaAdjacente.y].Ocupante = null;
+                            var subAdjacentes = GetCasasAdjacentes(tabuleiro, cadaAdjacente);
+
+                            if (subAdjacentes.Count(x => x.Ocupante.HasValue && guardaReal.Contains(x.Ocupante.Value)) > 1 && cadaAdjacente.Ocupante.Value == TipoJogador.Mercenario)
+                            {
+                                message.Add(string.Format("Um Mercenário foi encurralado em: ({0},{1})", cadaAdjacente.x, cadaAdjacente.y));
+                                tabuleiro.Colunas[cadaAdjacente.x].Casas[cadaAdjacente.y].Ocupante = null;
+                            }
+
+                            if (subAdjacentes.Count(x => x.Ocupante.HasValue && x.Ocupante.Value == TipoJogador.Mercenario) > 1 && cadaAdjacente.Ocupante.Value == TipoJogador.Soldado)
+                            {
+                                message.Add(string.Format("Um Soldado foi encurralado em: ({0},{1})", cadaAdjacente.x, cadaAdjacente.y));
+                                tabuleiro.Colunas[cadaAdjacente.x].Casas[cadaAdjacente.y].Ocupante = null;
+                            }
+
+                            if (subAdjacentes.Count(x => x.Ocupante.HasValue && x.Ocupante.Value == TipoJogador.Mercenario) == subAdjacentes.Count && cadaAdjacente.Ocupante.Value == TipoJogador.Rei)
+                            {
+                                message.Add(string.Format("O Rei foi encurralado em: ({0},{1})", cadaAdjacente.x, cadaAdjacente.y));
+                                tabuleiro.Colunas[cadaAdjacente.x].Casas[cadaAdjacente.y].Ocupante = null;
+                            }
                         }
                     }
                 }
-            }
 
-            return tabuleiro;
+                return tabuleiro;
+            }
+            catch (Exception ex)
+            {
+                message = new List<string>();
+                message.Add(ex.Message);
+                return null;
+            }
         }
 
         private VMTabuleiro OrganizarPecas(VMTabuleiro tabuleiro)
         {
-            tabuleiro.jogadorAtual = TipoJogador.Rei;
-            //Refúgios
+            try
             {
-                tabuleiro.Colunas[0].Casas[0].EhObjetivo = true;
-                tabuleiro.Colunas[10].Casas[0].EhObjetivo = true;
-                tabuleiro.Colunas[0].Casas[10].EhObjetivo = true;
-                tabuleiro.Colunas[10].Casas[10].EhObjetivo = true;
-            }
 
-            //Rei
+                tabuleiro.jogadorAtual = TipoJogador.Rei;
+                //Refúgios
+                {
+                    tabuleiro.Colunas[0].Casas[0].EhObjetivo = true;
+                    tabuleiro.Colunas[10].Casas[0].EhObjetivo = true;
+                    tabuleiro.Colunas[0].Casas[10].EhObjetivo = true;
+                    tabuleiro.Colunas[10].Casas[10].EhObjetivo = true;
+                }
+
+                //Rei
+                {
+                    tabuleiro.Colunas[5].Casas[5].Ocupante = TipoJogador.Rei;
+                }
+
+                //Soldados
+                {
+                    tabuleiro.Colunas[3].Casas[5].Ocupante = TipoJogador.Soldado;
+                    tabuleiro.Colunas[4].Casas[4].Ocupante = TipoJogador.Soldado;
+                    tabuleiro.Colunas[4].Casas[5].Ocupante = TipoJogador.Soldado;
+                    tabuleiro.Colunas[4].Casas[6].Ocupante = TipoJogador.Soldado;
+                    tabuleiro.Colunas[5].Casas[3].Ocupante = TipoJogador.Soldado;
+                    tabuleiro.Colunas[5].Casas[4].Ocupante = TipoJogador.Soldado;
+                    tabuleiro.Colunas[5].Casas[6].Ocupante = TipoJogador.Soldado;
+                    tabuleiro.Colunas[5].Casas[7].Ocupante = TipoJogador.Soldado;
+                    tabuleiro.Colunas[6].Casas[4].Ocupante = TipoJogador.Soldado;
+                    tabuleiro.Colunas[6].Casas[5].Ocupante = TipoJogador.Soldado;
+                    tabuleiro.Colunas[6].Casas[6].Ocupante = TipoJogador.Soldado;
+                    tabuleiro.Colunas[7].Casas[5].Ocupante = TipoJogador.Soldado;
+                }
+
+                //Mercenários
+                {
+                    tabuleiro.Colunas[3].Casas[0].Ocupante = TipoJogador.Mercenario;
+                    tabuleiro.Colunas[4].Casas[0].Ocupante = TipoJogador.Mercenario;
+                    tabuleiro.Colunas[5].Casas[0].Ocupante = TipoJogador.Mercenario;
+                    tabuleiro.Colunas[6].Casas[0].Ocupante = TipoJogador.Mercenario;
+                    tabuleiro.Colunas[7].Casas[0].Ocupante = TipoJogador.Mercenario;
+                    tabuleiro.Colunas[5].Casas[1].Ocupante = TipoJogador.Mercenario;
+
+                    tabuleiro.Colunas[0].Casas[3].Ocupante = TipoJogador.Mercenario;
+                    tabuleiro.Colunas[0].Casas[4].Ocupante = TipoJogador.Mercenario;
+                    tabuleiro.Colunas[0].Casas[5].Ocupante = TipoJogador.Mercenario;
+                    tabuleiro.Colunas[0].Casas[6].Ocupante = TipoJogador.Mercenario;
+                    tabuleiro.Colunas[0].Casas[7].Ocupante = TipoJogador.Mercenario;
+                    tabuleiro.Colunas[1].Casas[5].Ocupante = TipoJogador.Mercenario;
+
+                    tabuleiro.Colunas[3].Casas[10].Ocupante = TipoJogador.Mercenario;
+                    tabuleiro.Colunas[4].Casas[10].Ocupante = TipoJogador.Mercenario;
+                    tabuleiro.Colunas[5].Casas[10].Ocupante = TipoJogador.Mercenario;
+                    tabuleiro.Colunas[6].Casas[10].Ocupante = TipoJogador.Mercenario;
+                    tabuleiro.Colunas[7].Casas[10].Ocupante = TipoJogador.Mercenario;
+                    tabuleiro.Colunas[5].Casas[9].Ocupante = TipoJogador.Mercenario;
+
+                    tabuleiro.Colunas[9].Casas[5].Ocupante = TipoJogador.Mercenario;
+                    tabuleiro.Colunas[10].Casas[3].Ocupante = TipoJogador.Mercenario;
+                    tabuleiro.Colunas[10].Casas[4].Ocupante = TipoJogador.Mercenario;
+                    tabuleiro.Colunas[10].Casas[5].Ocupante = TipoJogador.Mercenario;
+                    tabuleiro.Colunas[10].Casas[6].Ocupante = TipoJogador.Mercenario;
+                    tabuleiro.Colunas[10].Casas[7].Ocupante = TipoJogador.Mercenario;
+                }
+
+                return tabuleiro;
+            }
+            catch (Exception ex)
             {
-                tabuleiro.Colunas[5].Casas[5].Ocupante = TipoJogador.Rei;
+                return null;
             }
-
-            //Soldados
-            {
-                tabuleiro.Colunas[3].Casas[5].Ocupante = TipoJogador.Soldado;
-                tabuleiro.Colunas[4].Casas[4].Ocupante = TipoJogador.Soldado;
-                tabuleiro.Colunas[4].Casas[5].Ocupante = TipoJogador.Soldado;
-                tabuleiro.Colunas[4].Casas[6].Ocupante = TipoJogador.Soldado;
-                tabuleiro.Colunas[5].Casas[3].Ocupante = TipoJogador.Soldado;
-                tabuleiro.Colunas[5].Casas[4].Ocupante = TipoJogador.Soldado;
-                tabuleiro.Colunas[5].Casas[6].Ocupante = TipoJogador.Soldado;
-                tabuleiro.Colunas[5].Casas[7].Ocupante = TipoJogador.Soldado;
-                tabuleiro.Colunas[6].Casas[4].Ocupante = TipoJogador.Soldado;
-                tabuleiro.Colunas[6].Casas[5].Ocupante = TipoJogador.Soldado;
-                tabuleiro.Colunas[6].Casas[6].Ocupante = TipoJogador.Soldado;
-                tabuleiro.Colunas[7].Casas[5].Ocupante = TipoJogador.Soldado;
-            }
-
-            //Mercenários
-            {
-                tabuleiro.Colunas[3].Casas[0].Ocupante = TipoJogador.Mercenario;
-                tabuleiro.Colunas[4].Casas[0].Ocupante = TipoJogador.Mercenario;
-                tabuleiro.Colunas[5].Casas[0].Ocupante = TipoJogador.Mercenario;
-                tabuleiro.Colunas[6].Casas[0].Ocupante = TipoJogador.Mercenario;
-                tabuleiro.Colunas[7].Casas[0].Ocupante = TipoJogador.Mercenario;
-                tabuleiro.Colunas[5].Casas[1].Ocupante = TipoJogador.Mercenario;
-
-                tabuleiro.Colunas[0].Casas[3].Ocupante = TipoJogador.Mercenario;
-                tabuleiro.Colunas[0].Casas[4].Ocupante = TipoJogador.Mercenario;
-                tabuleiro.Colunas[0].Casas[5].Ocupante = TipoJogador.Mercenario;
-                tabuleiro.Colunas[0].Casas[6].Ocupante = TipoJogador.Mercenario;
-                tabuleiro.Colunas[0].Casas[7].Ocupante = TipoJogador.Mercenario;
-                tabuleiro.Colunas[1].Casas[5].Ocupante = TipoJogador.Mercenario;
-
-                tabuleiro.Colunas[3].Casas[10].Ocupante = TipoJogador.Mercenario;
-                tabuleiro.Colunas[4].Casas[10].Ocupante = TipoJogador.Mercenario;
-                tabuleiro.Colunas[5].Casas[10].Ocupante = TipoJogador.Mercenario;
-                tabuleiro.Colunas[6].Casas[10].Ocupante = TipoJogador.Mercenario;
-                tabuleiro.Colunas[7].Casas[10].Ocupante = TipoJogador.Mercenario;
-                tabuleiro.Colunas[5].Casas[9].Ocupante = TipoJogador.Mercenario;
-
-                tabuleiro.Colunas[9].Casas[5].Ocupante = TipoJogador.Mercenario;
-                tabuleiro.Colunas[10].Casas[3].Ocupante = TipoJogador.Mercenario;
-                tabuleiro.Colunas[10].Casas[4].Ocupante = TipoJogador.Mercenario;
-                tabuleiro.Colunas[10].Casas[5].Ocupante = TipoJogador.Mercenario;
-                tabuleiro.Colunas[10].Casas[6].Ocupante = TipoJogador.Mercenario;
-                tabuleiro.Colunas[10].Casas[7].Ocupante = TipoJogador.Mercenario;
-            }
-
-            return tabuleiro;
         }
 
         private VMTabuleiro GerarMatriz()
         {
-            var tabuleiro = new VMTabuleiro();
-
-            tabuleiro.Colunas = new List<VMColuna>();
-
-            for (int i = 0; i < 11; i++)
+            try
             {
-                tabuleiro.Colunas.Add(new VMColuna());
-                tabuleiro.Colunas[i].Casas = new List<VMCasaTabuleiro>();
 
-                for (int j = 0; j < 11; j++)
+                var tabuleiro = new VMTabuleiro();
+
+                tabuleiro.Colunas = new List<VMColuna>();
+
+                for (int i = 0; i < 11; i++)
                 {
-                    tabuleiro.Colunas[i].Casas.Add(new VMCasaTabuleiro());
+                    tabuleiro.Colunas.Add(new VMColuna());
+                    tabuleiro.Colunas[i].Casas = new List<VMCasaTabuleiro>();
 
-                    tabuleiro.Colunas[i].Casas[j].x = i;
-                    tabuleiro.Colunas[i].Casas[j].y = j;
+                    for (int j = 0; j < 11; j++)
+                    {
+                        tabuleiro.Colunas[i].Casas.Add(new VMCasaTabuleiro());
+
+                        tabuleiro.Colunas[i].Casas[j].x = i;
+                        tabuleiro.Colunas[i].Casas[j].y = j;
+                    }
                 }
+
+                tabuleiro.Colunas[0].Casas[0].EhObjetivo = true;
+                tabuleiro.Colunas[0].Casas[10].EhObjetivo = true;
+                tabuleiro.Colunas[10].Casas[0].EhObjetivo = true;
+                tabuleiro.Colunas[10].Casas[10].EhObjetivo = true;
+
+                return tabuleiro;
             }
-
-            tabuleiro.Colunas[0].Casas[0].EhObjetivo = true;
-            tabuleiro.Colunas[0].Casas[10].EhObjetivo = true;
-            tabuleiro.Colunas[10].Casas[0].EhObjetivo = true;
-            tabuleiro.Colunas[10].Casas[10].EhObjetivo = true;
-
-            return tabuleiro;
+            catch (Exception ex)
+            {
+                return null;
+            }
         }
 
         private string CodificarPecas(VMTabuleiro tabuleiro)
         {
-            string pecas = string.Empty;
-
-            for (int i = 0; i < 11; i++)
+            try
             {
-                for (int j = 0; j < 11; j++)
+
+                string pecas = string.Empty;
+
+                for (int i = 0; i < 11; i++)
                 {
-                    int p = tabuleiro.Colunas[i].Casas[j].Ocupante.HasValue ? (int)tabuleiro.Colunas[i].Casas[j].Ocupante.Value : 0;
-                    pecas += i + "," + j + "," + p + ";";
+                    for (int j = 0; j < 11; j++)
+                    {
+                        int p = tabuleiro.Colunas[i].Casas[j].Ocupante.HasValue ? (int)tabuleiro.Colunas[i].Casas[j].Ocupante.Value : 0;
+                        pecas += i + "," + j + "," + p + ";";
+                    }
                 }
+
+                pecas += (int)tabuleiro.jogadorAtual;
+
+                return pecas;
             }
-
-            pecas += (int)tabuleiro.jogadorAtual;
-
-            return pecas;
+            catch (Exception ex)
+            {
+                return null;
+            }
         }
 
         private VMTabuleiro DecodificarPecas(VMTabuleiro tabuleiro, string pecas)
         {
+            try
+            {
+
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
             var p = pecas.Split(';').ToList();
 
             tabuleiro.jogadorAtual = (TipoJogador)int.Parse(p[p.Count - 1]);
@@ -476,6 +575,7 @@ namespace VLR.Controllers
         {
             return string.Format("O {0} foi de: ({1},{2}) --> ({3},{4})", GetTipoJogadorString(movimento.CasaAtual.Ocupante.Value), movimento.CasaAtual.x.ToString(), movimento.CasaAtual.y.ToString(), movimento.CasaObjetivo.x.ToString(), movimento.CasaObjetivo.y.ToString());
         }
+
         private string GetTipoJogadorString(TipoJogador tipo)
         {
             switch (tipo)
@@ -494,6 +594,14 @@ namespace VLR.Controllers
 
         private List<VMCasaTabuleiro> GetCasasAdjacentes(VMTabuleiro tabuleiro, VMCasaTabuleiro CasaObjetivo)
         {
+            try
+            {
+
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
             var adjacentes = new List<VMCasaTabuleiro>();
 
             if (CasaObjetivo.x > 0)
@@ -521,22 +629,277 @@ namespace VLR.Controllers
 
         private bool ObjetivoConcluido(VMTabuleiro tabuleiro, out string message)
         {
-            message = "Objetivo concluído por: " + GetTipoJogadorString(tabuleiro.jogadorAtual);
-
-            if (!tabuleiro.Colunas.Any(y => y.Casas.Any(x => x.Ocupante.HasValue && x.Ocupante.Value == TipoJogador.Rei)) && tabuleiro.jogadorAtual == TipoJogador.Mercenario)
+            try
             {
-                return true;
+                message = "Objetivo concluído por: " + GetTipoJogadorString(tabuleiro.jogadorAtual);
+
+                if (!tabuleiro.Colunas.Any(y => y.Casas.Any(x => x.Ocupante.HasValue && x.Ocupante.Value == TipoJogador.Rei)) && tabuleiro.jogadorAtual == TipoJogador.Mercenario)
+                {
+                    return true;
+                }
+
+                var objetivos = new List<VMCasaTabuleiro>() { tabuleiro.Colunas[0].Casas[0], tabuleiro.Colunas[10].Casas[0], tabuleiro.Colunas[0].Casas[10], tabuleiro.Colunas[10].Casas[10] };
+
+                if (objetivos.Any(x => x.Ocupante.HasValue && x.Ocupante.Value == TipoJogador.Rei))
+                {
+                    return true;
+                }
+
+                message = "Objetivo ainda não concluído por: " + GetTipoJogadorString(tabuleiro.jogadorAtual);
+                return false;
             }
-
-            var objetivos = new List<VMCasaTabuleiro>() { tabuleiro.Colunas[0].Casas[0], tabuleiro.Colunas[10].Casas[0], tabuleiro.Colunas[0].Casas[10], tabuleiro.Colunas[10].Casas[10] };
-
-            if(objetivos.Any(x => x.Ocupante.HasValue && x.Ocupante.Value == TipoJogador.Rei))
+            catch (Exception ex)
             {
-                return true;
+                message = ex.Message;
+                return false;
             }
-
-            message = "Objetivo ainda não concluído por: " + GetTipoJogadorString(tabuleiro.jogadorAtual);
-            return false;
         }
+
+        private bool EstouEmPerigo(VMTabuleiro tabuleiro, VMCasaTabuleiro casa)
+        {
+            try
+            {
+
+                var adjacentes = GetCasasAdjacentes(tabuleiro, casa);
+
+                var guardaReal = new List<TipoJogador>() { TipoJogador.Rei, TipoJogador.Soldado };
+
+                var casasObjetivo = new List<VMCasaTabuleiro>() { tabuleiro.Colunas[0].Casas[0], tabuleiro.Colunas[0].Casas[10], tabuleiro.Colunas[10].Casas[0], tabuleiro.Colunas[10].Casas[10], tabuleiro.Colunas[5].Casas[5] };
+
+                switch (tabuleiro.jogadorAtual)
+                {
+                    case TipoJogador.Rei:
+                        if (adjacentes.Count(x => x.Ocupante.HasValue && x.Ocupante.Value == TipoJogador.Mercenario) > adjacentes.Count)
+                        {
+                            return true;
+                        }
+
+                        if (adjacentes.Count(x => x.Ocupante.HasValue && guardaReal.Contains(x.Ocupante.Value)) > 2 && adjacentes.Any(x => casasObjetivo.Contains(x)))
+                        {
+                            return true;
+                        }
+                        break;
+                    case TipoJogador.Mercenario:
+                        if (adjacentes.Count(x => x.Ocupante.HasValue && guardaReal.Contains(x.Ocupante.Value)) > 1)
+                        {
+                            return true;
+                        }
+
+                        if (adjacentes.Count(x => x.Ocupante.HasValue && guardaReal.Contains(x.Ocupante.Value)) > 0 && adjacentes.Any(x => casasObjetivo.Contains(x)))
+                        {
+                            return true;
+                        }
+                        break;
+                    case TipoJogador.Soldado:
+                        if (adjacentes.Count(x => x.Ocupante.HasValue && x.Ocupante.Value == TipoJogador.Mercenario) > 1)
+                        {
+                            return true;
+                        }
+
+                        if (adjacentes.Count(x => x.Ocupante.HasValue && x.Ocupante.Value == TipoJogador.Mercenario) > 0 && adjacentes.Any(x => casasObjetivo.Contains(x)))
+                        {
+                            return true;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        private bool EstouAjudandoACercar(VMTabuleiro tabuleiro, VMCasaTabuleiro casa)
+        {
+            try
+            {
+
+                var adjacentes = GetCasasAdjacentes(tabuleiro, casa);
+
+                if (tabuleiro.jogadorAtual != TipoJogador.Mercenario)
+                {
+                    adjacentes = adjacentes.Where(x => x.Ocupante.HasValue && x.Ocupante.Value == TipoJogador.Mercenario).ToList();
+                }
+                else
+                {
+                    adjacentes = adjacentes.Where(x => x.Ocupante.HasValue && x.Ocupante.Value != TipoJogador.Mercenario).ToList();
+                }
+
+                foreach (var cadaAdjacente in adjacentes)
+                {
+                    var subAdjacentes = GetCasasAdjacentes(tabuleiro, cadaAdjacente);
+
+                    if (subAdjacentes.Any(x => x.Ocupante.HasValue && x.Ocupante.Value == tabuleiro.jogadorAtual))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        private bool PossoTocarORei(VMTabuleiro tabuleiro, VMMovimento movimento)
+        {
+            try
+            {
+                var rei = tabuleiro.Colunas.FirstOrDefault(z => z.Casas.Any(y => y.Ocupante.HasValue && y.Ocupante.Value == TipoJogador.Rei)).Casas.FirstOrDefault(y => y.Ocupante.HasValue && y.Ocupante.Value == TipoJogador.Rei);
+
+                var adjacenteRei = GetCasasAdjacentes(tabuleiro, rei);
+
+                return adjacenteRei.Contains(movimento.CasaObjetivo);
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+        private VMTabuleiro SimularJogada(VMTabuleiro tabuleiro, VMMovimento movimento)
+        {
+            try
+            {
+                movimento.CasaAtual.Ocupante = tabuleiro.jogadorAtual;
+
+                var tabuleiroSimulado = new VMTabuleiro(tabuleiro.Colunas, movimento.CasaAtual.Ocupante.Value);
+
+                List<string> messages;
+                tabuleiroSimulado = RealizarMovimento(tabuleiroSimulado, movimento, out messages);
+
+                return tabuleiroSimulado;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        private bool PossoSalvarAlguem(VMTabuleiro tabuleiro, VMMovimento movimento)
+        {
+            try
+            {
+
+            }
+            catch (Exception ex)
+            {
+            }
+
+            return false;
+
+            //if (tabuleiro.jogadorAtual == TipoJogador.Mercenario)
+            //{
+            //    var adjacentes = GetCasasAdjacentes(tabuleiro, movimento.CasaObjetivo);
+
+            //    adjacentes = adjacentes.Where(x => x.Ocupante.HasValue && )
+            //}
+            //else
+            //{
+            //    var movimentos = 
+            //}
+        }
+
+        private int CalcularDistancia(VMCasaTabuleiro casaOrigem, VMCasaTabuleiro casaDestino)
+        {
+            try
+            {
+                var distancia = (casaDestino.x - casaOrigem.x) * (casaDestino.x - casaOrigem.x);
+                distancia += (casaDestino.y - casaOrigem.y) * (casaDestino.y - casaOrigem.y);
+
+                return distancia;
+            }
+            catch (Exception ex)
+            {
+                return 0;
+            }
+
+        }
+
+        private VMCasaTabuleiro MelhorObjetivo(VMTabuleiro tabuleiro, TipoJogador jogadorAtual)
+        {
+            try
+            {
+                var rei = tabuleiro.Colunas.FirstOrDefault(z => z.Casas.Any(y => y.Ocupante.HasValue && y.Ocupante.Value == TipoJogador.Rei)).Casas.FirstOrDefault(y => y.Ocupante.HasValue && y.Ocupante.Value == TipoJogador.Rei);
+
+                switch (jogadorAtual)
+                {
+                    case TipoJogador.Mercenario:
+                        return rei;
+                    case TipoJogador.Rei:
+                        var objetivos = new List<VMCasaTabuleiro>() { tabuleiro.Colunas[0].Casas[0], tabuleiro.Colunas[10].Casas[0], tabuleiro.Colunas[0].Casas[10], tabuleiro.Colunas[10].Casas[10] };
+
+                        return objetivos.OrderBy(x => CalcularDistancia(x, rei)).FirstOrDefault();
+                    default:
+                        return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+        private List<VMHeuristica> AbrirCaminho(VMTabuleiro tabuleiro)
+        {
+            try
+            {
+
+                if (tabuleiro.jogadorAtual == TipoJogador.Soldado)
+                {
+                    var rei = MelhorObjetivo(tabuleiro, TipoJogador.Mercenario);
+
+                    var adjacentes = GetCasasAdjacentes(tabuleiro, rei);
+
+                    var heuristica = new List<VMHeuristica>();
+
+                    foreach (var cadaAdjacente in adjacentes)
+                    {
+                        var movimentos = GetMovimentosDisponiveisPorPeca(tabuleiro, cadaAdjacente);
+
+                        if (movimentos.Any())
+                        {
+                            foreach (var cadaMovimento in movimentos)
+                            {
+                                heuristica.Add(new VMHeuristica(cadaMovimento, 0, EstouEmPerigo(tabuleiro, cadaMovimento.CasaObjetivo), false, false, 0));
+                            }
+                        }
+                        else
+                        {
+                            var subAdjacentes = GetCasasAdjacentes(tabuleiro, cadaAdjacente);
+
+                            foreach (var cadaSubAdjacentes in subAdjacentes)
+                            {
+                                var movimentosPorPeca = GetMovimentosDisponiveisPorPeca(tabuleiro, cadaSubAdjacentes);
+
+                                if (movimentosPorPeca.Any())
+                                {
+                                    foreach (var cadaMovimento in movimentosPorPeca)
+                                    {
+                                        heuristica.Add(new VMHeuristica(cadaMovimento, 0, EstouEmPerigo(tabuleiro, cadaMovimento.CasaObjetivo), false, false, 0));
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+
+                    return heuristica.OrderBy(x => x.Valor).ToList();
+                }
+
+                return new List<VMHeuristica>(); ;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
     }
 }
