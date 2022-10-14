@@ -64,7 +64,7 @@ namespace VLR.Controllers
 
                 form.Tabuleiro.jogadorAtual = proximoJogador;
 
-                var melhorMovimento = MelhorMovimento(form.Tabuleiro,0, out int i);
+                var melhorMovimento = MelhorMovimento(form.Tabuleiro, 0, out int i);
 
                 if (melhorMovimento != null)
                 {
@@ -286,22 +286,35 @@ namespace VLR.Controllers
                         break;
                     case TipoJogador.Mercenario:
                         melhorObjetivo = MelhorObjetivo(tabuleiro, TipoJogador.Mercenario);
-
                         for (var z = 0; z < movimentosPossiveis.Count; z++)
                         {
-                            var tabuleiroSimulado = SimularJogada(tabuleiro, movimentosPossiveis[z]);
+                            var distanciaPercorrida = CalcularDistancia(movimentosPossiveis[z].CasaAtual, melhorObjetivo);
+                            var perigo = EstouEmPerigo(tabuleiro, movimentosPossiveis[z].CasaObjetivo);
+                            var interceptarRei = PossoInterceptarRei(tabuleiro, movimentosPossiveis[z]);
+                            var cercando = EstouAjudandoACercar(tabuleiro, movimentosPossiveis[z].CasaObjetivo);
+                            var tocandoRei = PossoTocarORei(tabuleiro, movimentosPossiveis[z]);
 
-                            tabuleiroSimulado.jogadorAtual = TipoJogador.Rei;
+                            int valor = 0;
+                            if (PossoInterceptarRei(tabuleiro, movimentosPossiveis[z]))
+                            {
+                                valor = CalcularDistancia(movimentosPossiveis[z].CasaAtual, movimentosPossiveis[z].CasaObjetivo);
+                            }
 
-                            var melhorMovimentoRei = MelhorMovimento(tabuleiroSimulado, level, out nivel);
+                            //Recursividade
+                            {
+                                var tabuleiroSimulado = SimularJogada(tabuleiro, movimentosPossiveis[z]);
+                                tabuleiroSimulado.jogadorAtual = TipoJogador.Rei;
 
-                            listaMovimentos.Add(new VMHeuristica(movimentosPossiveis[z], CalcularDistancia(movimentosPossiveis[z].CasaAtual, melhorObjetivo), EstouEmPerigo(tabuleiro, movimentosPossiveis[z].CasaObjetivo), EstouAjudandoACercar(tabuleiro, movimentosPossiveis[z].CasaObjetivo), PossoTocarORei(tabuleiro, movimentosPossiveis[z]), level));
+                                var melhorMovimentoRei = MelhorMovimento(tabuleiroSimulado, level, out nivel);
+                            }
+
+                            listaMovimentos.Add(new VMHeuristica(movimentosPossiveis[z], distanciaPercorrida, perigo, cercando, tocandoRei, valor, level));
                         }
 
-                        listaMovimentos = listaMovimentos.OrderBy(y => y.Valor).ToList();
+                        listaMovimentos = listaMovimentos.OrderByDescending(y => y.Valor).ToList();
                         break;
                     default:
-                        listaMovimentos.Add(new VMHeuristica(movimentosPossiveis[c], 0, false, false, false, 0));
+                        listaMovimentos.Add(new VMHeuristica(movimentosPossiveis[c], 0, false));
                         break;
                 }
 
@@ -810,14 +823,61 @@ namespace VLR.Controllers
         {
             try
             {
-                var distancia = (casaDestino.x - casaOrigem.x) * (casaDestino.x - casaOrigem.x);
-                distancia += (casaDestino.y - casaOrigem.y) * (casaDestino.y - casaOrigem.y);
-
-                return distancia;
+                return (int)(Math.Pow(casaDestino.x, 2) + Math.Pow(casaDestino.y, 2));
             }
             catch (Exception ex)
             {
                 return 0;
+            }
+
+        }
+
+        private List<VMCasaTabuleiro> CasasPercorridas(VMTabuleiro tabuleiro, VMMovimento movimento)
+        {
+            try
+            {
+                var lista = new List<VMCasaTabuleiro>();
+
+                if (movimento.CasaAtual.x == movimento.CasaObjetivo.x)
+                {
+                    if (movimento.CasaAtual.y < movimento.CasaObjetivo.y)
+                    {
+                        for (int i = movimento.CasaAtual.y; i < movimento.CasaObjetivo.y; i++)
+                        {
+                            lista.Add(tabuleiro.Colunas[movimento.CasaAtual.x].Casas[i]);
+                        }
+                    }
+                    else
+                    {
+                        for (int i = movimento.CasaAtual.y; i > movimento.CasaObjetivo.y; i--)
+                        {
+                            lista.Add(tabuleiro.Colunas[movimento.CasaAtual.x].Casas[i]);
+                        }
+                    }
+                }
+                else
+                {
+                    if (movimento.CasaAtual.x < movimento.CasaObjetivo.x)
+                    {
+                        for (int i = movimento.CasaAtual.x; i < movimento.CasaObjetivo.x; i++)
+                        {
+                            lista.Add(tabuleiro.Colunas[i].Casas[movimento.CasaObjetivo.y]);
+                        }
+                    }
+                    else
+                    {
+                        for (int i = movimento.CasaAtual.x; i > movimento.CasaObjetivo.x; i--)
+                        {
+                            lista.Add(tabuleiro.Colunas[i].Casas[movimento.CasaObjetivo.y]);
+                        }
+                    }
+                }
+
+                return lista;
+            }
+            catch (Exception ex)
+            {
+                return null;
             }
 
         }
@@ -867,7 +927,7 @@ namespace VLR.Controllers
                         {
                             foreach (var cadaMovimento in movimentos)
                             {
-                                heuristica.Add(new VMHeuristica(cadaMovimento, 0, EstouEmPerigo(tabuleiro, cadaMovimento.CasaObjetivo), false, false, 0));
+                                heuristica.Add(new VMHeuristica(cadaMovimento, 0, EstouEmPerigo(tabuleiro, cadaMovimento.CasaObjetivo)));
                             }
                         }
                         else
@@ -882,7 +942,7 @@ namespace VLR.Controllers
                                 {
                                     foreach (var cadaMovimento in movimentosPorPeca)
                                     {
-                                        heuristica.Add(new VMHeuristica(cadaMovimento, 0, EstouEmPerigo(tabuleiro, cadaMovimento.CasaObjetivo), false, false, 0));
+                                        heuristica.Add(new VMHeuristica(cadaMovimento, 0, EstouEmPerigo(tabuleiro, cadaMovimento.CasaObjetivo)));
                                     }
                                 }
                             }
@@ -899,6 +959,13 @@ namespace VLR.Controllers
             {
                 return null;
             }
+        }
+
+        private bool PossoInterceptarRei(VMTabuleiro tabuleiro, VMMovimento movimento)
+        {
+            var reiPassaraAqui = CasasPercorridas(tabuleiro, movimento);
+
+            return reiPassaraAqui.Contains(movimento.CasaObjetivo);
         }
 
     }

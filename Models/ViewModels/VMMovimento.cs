@@ -14,6 +14,8 @@ namespace VLR.Models.ViewModels
 
         public VMCasaTabuleiro CasaObjetivo { get; set; }
 
+        public int Custo { get; set; }
+
 
         public VMMovimento()
         {
