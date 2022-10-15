@@ -14,7 +14,7 @@ namespace VLR.Models.ViewModels
         {
         }
 
-        public VMHeuristica(VMMovimento movimento, int distancia, bool estouEmPerigo, bool estouAjudando, bool tocandoORei, int distanciaDoRei, int DistObjOponente)
+        public VMHeuristica(VMMovimento movimento, bool estouEmPerigo, bool estouAjudando, bool tocandoORei, bool possoInterceptarRei, int DistObjOponente)
         {
             this.Movimento = movimento;
 
@@ -23,19 +23,40 @@ namespace VLR.Models.ViewModels
             switch (jogador)
             {
                 case Enumerators.TipoJogador.Mercenario:
-                    this.Valor = (12 - (int)Math.Sqrt(distancia)) * 10;
-                    this.Valor += (12 - (int)Math.Sqrt(distanciaDoRei)) * 10;
-                    this.Valor += DistObjOponente * 100;
-
-                    this.Valor += estouAjudando ? 10000 : 0;
-                    this.Valor += tocandoORei ? 30000 : 0;
-                    this.Valor += estouEmPerigo ? -10000 : 0 ;
-
+                    if (possoInterceptarRei)
+                    {
+                        this.Valor = 0;
+                    }
+                    else
+                    {
+                        //this.Valor = distancia
+                        this.Valor += estouAjudando ? 0 : 50;
+                        this.Valor += tocandoORei ? 0 : 50;
+                        this.Valor += estouEmPerigo ? 50 : 0;
+                        this.Valor += 20 - DistObjOponente;
+                        this.Valor += possoInterceptarRei ? 0 : 50;
+                    }
                     break;
             }
         }
 
-        public VMHeuristica(VMMovimento movimento, int distancia, bool estouEmPerigo)
+        public VMHeuristica(VMMovimento movimento, int distancia, bool estouEmPerigo, int distanciaPercorrida)
+        {
+            this.Movimento = movimento;
+
+            var jogador = movimento.CasaAtual.Ocupante.HasValue ? movimento.CasaAtual.Ocupante.Value : movimento.CasaObjetivo.Ocupante.Value;
+
+            switch (jogador)
+            {
+                case Enumerators.TipoJogador.Rei:
+                    this.Valor = distancia;
+                    this.Valor += estouEmPerigo ? 100 : 0;
+                    this.Valor += distanciaPercorrida;
+                    break;
+            }
+        }
+
+        public VMHeuristica(VMMovimento movimento, bool cercando, bool estouEmPerigo)
         {
             this.Movimento = movimento;
 
@@ -44,13 +65,10 @@ namespace VLR.Models.ViewModels
             switch (jogador)
             {
                 case Enumerators.TipoJogador.Soldado:
-                case Enumerators.TipoJogador.Rei:
-                    this.Valor = (int)Math.Sqrt(distancia);
+                    this.Valor += cercando ? 0 : 50;
                     this.Valor += estouEmPerigo ? 100 : 0;
                     break;
             }
-
-
         }
     }
 }
