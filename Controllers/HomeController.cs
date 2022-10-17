@@ -73,7 +73,7 @@ namespace VLR.Controllers
                     {
                         form.Tabuleiro = MostrarCaminhoRei(form.Tabuleiro, melhorCaminhoPercorrido);
                     }
-                    
+
                     List<string> message;
                     form.mensagens.Add(DescreverPasso(melhorMovimento));
 
@@ -243,7 +243,7 @@ namespace VLR.Controllers
         {
             try
             {
-                var listaMovimentos = new List<VMHeuristica>(); 
+                var listaMovimentos = new List<VMHeuristica>();
                 melhorCaminhoPercorrido = new List<VMCasaTabuleiro>();
 
                 switch (tabuleiro.jogadorAtual)
@@ -965,7 +965,7 @@ namespace VLR.Controllers
 
                                     distanciaDoRei = distanciaDoRei * 2;
 
-                                    heuristica.Add(new VMHeuristica(cadaMovimento, cercando, estouEmPerigo, distanciaDoRei, false)) ;
+                                    heuristica.Add(new VMHeuristica(cadaMovimento, cercando, estouEmPerigo, distanciaDoRei, false));
                                 }
 
                                 break;
@@ -1070,44 +1070,49 @@ namespace VLR.Controllers
             try
             {
                 var listaMovimentos = new List<VMHeuristica>();
+                melhorCaminhoPercorrido = new List<VMCasaTabuleiro>();
 
                 var movimentosPossiveis = GetMovimentosPossiveis(tabuleiro);
 
-                var melhorObjetivo = MelhorObjetivo(tabuleiro, TipoJogador.Mercenario);
+                var tabuleiroSimulado = new VMTabuleiro(tabuleiro.Colunas, TipoJogador.Rei);
+
+                var listaCaminhoPercorrido = CaminhoDoReiObjetivo(tabuleiroSimulado);
+
+                var melhorObjetivo = MelhorObjetivo(tabuleiroSimulado, TipoJogador.Mercenario);
 
                 melhorCaminhoPercorrido = new List<VMCasaTabuleiro>();
 
-                bool alguemJaPassou = false;
-
-                var tabuleiroSimulado = new VMTabuleiro(tabuleiro.Colunas, TipoJogador.Rei);
-
-                var listaCaminhoPercorrido = CaminhoDoReiObjetivo(tabuleiro);
-
                 for (var z = 0; z < movimentosPossiveis.Count; z++)
                 {
-                    //var distanciaPercorrida = CalcularDistancia(movimentosPossiveis[z].CasaAtual, melhorObjetivo);
                     var perigo = EstouEmPerigo(tabuleiro, movimentosPossiveis[z].CasaObjetivo);
                     var cercando = EstouAjudandoACercar(tabuleiro, movimentosPossiveis[z].CasaObjetivo);
                     var tocandoRei = PossoTocarORei(tabuleiro, movimentosPossiveis[z]);
-                    var distanciaReiObjetivo = 1;
+                    var distanciaReiObjetivo = 0;
                     var vouPassarPorLa = false;
 
                     if (listaCaminhoPercorrido != null && listaCaminhoPercorrido.Any())
                     {
                         vouPassarPorLa = listaCaminhoPercorrido.Contains(movimentosPossiveis[z].CasaObjetivo);
+                        //distanciaReiObjetivo = listaCaminhoPercorrido.Count;
                     }
 
                     var heuristica = new VMHeuristica(movimentosPossiveis[z], perigo, cercando, tocandoRei, vouPassarPorLa, distanciaReiObjetivo);
 
-                    if (listaMovimentos.Any() && listaMovimentos[0].Valor > heuristica.Valor)
-                    {
-                        melhorCaminhoPercorrido = listaCaminhoPercorrido;
-                    }
+                    //if (listaMovimentos.Any() && listaMovimentos[0].Valor < heuristica.Valor)
+                    //{
+                    //    melhorCaminhoPercorrido = listaCaminhoPercorrido;
+                    //}
+                    //else if (!listaMovimentos.Any())
+                    //{
+                    //    melhorCaminhoPercorrido = listaCaminhoPercorrido;
+                    //}
 
                     listaMovimentos.Add(heuristica);
 
-                    listaMovimentos = listaMovimentos.OrderBy(y => y.Valor).ToList();
+                    listaMovimentos = listaMovimentos.OrderByDescending(y => y.Valor).ToList();
                 }
+
+                listaMovimentos = listaMovimentos.OrderByDescending(y => y.Valor).ToList();
 
                 return listaMovimentos;
             }
@@ -1163,7 +1168,7 @@ namespace VLR.Controllers
 
                 int i = 0;
                 var distanciaReiObjetivo = 1;
-                
+
 
                 while (distanciaReiObjetivo > 0)
                 {
@@ -1186,7 +1191,7 @@ namespace VLR.Controllers
                     listaCaminhoPercorrido.AddRange(casasDoMovimento);
 
                     distanciaReiObjetivo = CalcularDistancia(movimentoHeuristicaRei[0].Movimento.CasaObjetivo, melhorObjetivo);
-                    
+
                     if (distanciaReiObjetivo > 0)
                     {
                         tabuleiroSimulado = SimularJogada(tabuleiroSimulado, movimentoHeuristicaRei[0].Movimento);
@@ -1205,7 +1210,7 @@ namespace VLR.Controllers
 
                 return listaCaminhoPercorrido;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return new List<VMCasaTabuleiro>();
             }

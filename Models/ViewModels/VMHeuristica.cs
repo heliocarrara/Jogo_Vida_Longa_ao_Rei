@@ -23,11 +23,15 @@ namespace VLR.Models.ViewModels
             switch (jogador)
             {
                 case Enumerators.TipoJogador.Mercenario:
-                    this.Valor += estouAjudando ? 0 : 50;
-                    this.Valor += tocandoORei ? 0 : 50;
-                    this.Valor += estouEmPerigo ? 50 : 0;
-                    this.Valor += possoInterceptarRei ? 0 : 200;
-                    this.Valor += 20 - DistObjOponente;
+                    //this.Valor = DistObjOponente;
+
+                    this.Valor += possoInterceptarRei ? 1000 : 0;
+
+                    this.Valor += estouAjudando ? 100 : 0;
+
+                    this.Valor -= estouEmPerigo ? 100 : 0;
+
+                    this.Valor += tocandoORei ? 100 : 0;
                     break;
             }
         }
@@ -57,10 +61,10 @@ namespace VLR.Models.ViewModels
             switch (jogador)
             {
                 case Enumerators.TipoJogador.Soldado:
-                    this.Valor =  30 - distanciaDoRei;
-                    this.Valor += cercando ? 0 : 50;
-                    this.Valor += estouHaUmPasso ? 0 : 200;
-                    this.Valor += estouEmPerigo ? 50 : 0;
+                    this.Valor = distanciaDoRei;
+                    this.Valor += estouEmPerigo ? (distanciaDoRei * 2) : 0;
+                    this.Valor -= estouHaUmPasso ? ((distanciaDoRei / 100) * 50) : 0;
+                    this.Valor -= cercando ? ((distanciaDoRei / 100) * 20) : 0;
                     break;
             }
         }
