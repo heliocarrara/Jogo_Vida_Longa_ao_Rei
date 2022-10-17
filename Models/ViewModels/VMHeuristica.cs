@@ -23,24 +23,16 @@ namespace VLR.Models.ViewModels
             switch (jogador)
             {
                 case Enumerators.TipoJogador.Mercenario:
-                    if (possoInterceptarRei)
-                    {
-                        this.Valor = 0;
-                    }
-                    else
-                    {
-                        //this.Valor = distancia
-                        this.Valor += estouAjudando ? 0 : 50;
-                        this.Valor += tocandoORei ? 0 : 50;
-                        this.Valor += estouEmPerigo ? 50 : 0;
-                        this.Valor += 20 - DistObjOponente;
-                        this.Valor += possoInterceptarRei ? 0 : 50;
-                    }
+                    this.Valor += estouAjudando ? 0 : 50;
+                    this.Valor += tocandoORei ? 0 : 50;
+                    this.Valor += estouEmPerigo ? 50 : 0;
+                    this.Valor += possoInterceptarRei ? 0 : 200;
+                    this.Valor += 20 - DistObjOponente;
                     break;
             }
         }
 
-        public VMHeuristica(VMMovimento movimento, int distancia, bool estouEmPerigo, int distanciaPercorrida)
+        public VMHeuristica(VMMovimento movimento, int distanciaPercorrida, bool estouEmPerigo, int distanciaObjetivo)
         {
             this.Movimento = movimento;
 
@@ -49,14 +41,14 @@ namespace VLR.Models.ViewModels
             switch (jogador)
             {
                 case Enumerators.TipoJogador.Rei:
-                    this.Valor = distancia;
+                    //this.Valor = distanciaPercorrida;
                     this.Valor += estouEmPerigo ? 100 : 0;
-                    this.Valor += distanciaPercorrida;
+                    this.Valor += distanciaObjetivo;
                     break;
             }
         }
 
-        public VMHeuristica(VMMovimento movimento, bool cercando, bool estouEmPerigo)
+        public VMHeuristica(VMMovimento movimento, bool cercando, bool estouEmPerigo, int distanciaDoRei, bool estouHaUmPasso)
         {
             this.Movimento = movimento;
 
@@ -65,8 +57,10 @@ namespace VLR.Models.ViewModels
             switch (jogador)
             {
                 case Enumerators.TipoJogador.Soldado:
+                    this.Valor =  30 - distanciaDoRei;
                     this.Valor += cercando ? 0 : 50;
-                    this.Valor += estouEmPerigo ? 100 : 0;
+                    this.Valor += estouHaUmPasso ? 0 : 200;
+                    this.Valor += estouEmPerigo ? 50 : 0;
                     break;
             }
         }
