@@ -1,9 +1,11 @@
 ﻿@model VLR.Models.ViewModels.FormViewModels.VMFormTabuleiro
 
 <br />
-<p>
-    @Html.ActionLink("Ir Proximo", "Proximo", new { Area = "", pecas = Model.pecas }, new { @class = "btn btn-success", @name="btn" })
-</p>
+<button type="button" class="btn btn-success" id="btn_proximo">Ir Proximo</button>
+
+<label>
+    <input type="checkbox" id="switchAutoClick" @(ViewBag.autoClick ? "checked='checked'" : "")> Ativar auto clique
+</label>
 @if (Model != null)
 {
     <span id="spn_tabuleiro" name="spn_tabuleiro">
@@ -18,3 +20,27 @@
         </div>
     }
 }
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>  <!-- Garanta que você tenha jQuery carregado -->
+<script type="text/javascript">
+    $(document).ready(function() {
+        var btnProximo = $('#btn_proximo');
+        var switchAutoClick = $('#switchAutoClick');
+
+        btnProximo.click(function() {
+            var urlDestino = '@Url.Action("Proximo", new { Area = "", pecas = Model.pecas })';
+
+            if(switchAutoClick.is(':checked')) {
+                urlDestino += '&autoClick=true';
+            }
+
+            window.location.href = urlDestino;
+        });
+
+        if(switchAutoClick.is(':checked')) {
+            setTimeout(function() {
+                btnProximo.click();
+            }, 3000);
+        }
+    });
+</script>

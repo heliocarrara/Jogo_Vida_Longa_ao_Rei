@@ -27,6 +27,9 @@ namespace VLR.Controllers
                 form.Tabuleiro = tabuleiro;
                 form.pecas = CodificarPecas(form.Tabuleiro);
                 form.qntMovimento = 1;
+
+                ViewBag.autoClick = false;
+
                 return View(view, form);
             }
             catch
@@ -39,8 +42,6 @@ namespace VLR.Controllers
         {
             try
             {
-                //var form = new VMFormTabuleiro();
-
                 if (form == null || string.IsNullOrEmpty(form.pecas))
                 {
                     throw new Exception("Formularío não carregado.");
@@ -99,9 +100,11 @@ namespace VLR.Controllers
             }
         }
 
-        public ActionResult Proximo(string pecas)
+        public ActionResult Proximo(string pecas, bool autoClick)
         {
             var form = new VMFormTabuleiro();
+
+            ViewBag.autoClick = autoClick;
 
             form.pecas = pecas;
 
